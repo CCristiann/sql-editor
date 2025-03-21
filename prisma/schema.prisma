@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+    previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+enum Continent {
+    Asia
+    Europe
+    NorthAmerica
+    Africa
+    Oceania
+    Antarctica
+    SouthAmerica
+}
+
+model Country {
+  code           String   @id
+  name           String 
+  continent      Continent
+  region         String  
+  surfaceArea    Decimal  
+  indepYear      Int?     
+  population     Int 
+  lifeExpectancy Decimal?
+  gnp            Decimal?
+  gnpOld         Decimal? 
+  localName      String   
+  governmentForm String   
+  headOfState    String?  
+  capital        Int? 
+  code2          String  
+
+  cities         City[]
+  languages      CountryLanguage[]
+}
+
+model City {
+  id          Int     @id @default(autoincrement())
+  name        String 
+  countryCode String 
+  district    String  
+  population  Int    
+
+  country     Country @relation(fields: [countryCode], references: [code])
+}
+
+model CountryLanguage {
+  countryCode String  
+  language    String  
+  isOfficial  Boolean 
+  percentage  Decimal 
+
+  country     Country @relation(fields: [countryCode], references: [code])
+
+  @@id([countryCode, language])
+}
