@@ -1,6 +1,6 @@
 "use client";
 
-import { Send, Sparkles } from "lucide-react";
+import { Loader2, Send, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { z } from "zod";
@@ -17,6 +17,8 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "./ui/sheet";
+import { CodeBlock } from "./aceternityui/CodeBlock";
+import { Skeleton } from "./ui/skeleton";
 
 export const formSchema = z.object({
   message: z.string({ message: "Message is required" }),
@@ -43,7 +45,7 @@ export default function AskAI() {
       });
 
       const data = await response.json();
-      return data
+      return data;
     },
     onError: (err) => {
       toast.error(err.message || "Something went wrong!");
@@ -53,18 +55,28 @@ export default function AskAI() {
   const onSubmit = (values: formSchemaType) => mutate(values);
   return (
     <Sheet>
-      <SheetTrigger asChild>
-        <Button variant={"outline"}>
-          <Sparkles className="size-5 text-yellow-500" />
-          Ask AI
-        </Button>
+      <SheetTrigger>
+        <div className="fixed bottom-4 right-4 size-12 rounded-full border border-input/50 bg-white dark:bg-neutral-900/70 p-2 flex items-center gap-x-1.5">
+          <Sparkles className="w-full h-full text-yellow-500 fill-yellow-500" />
+        </div>
       </SheetTrigger>
-      <SheetContent className="w-[400px]">
+      <SheetContent className="min-w-[600px]">
         <SheetHeader>
-          <SheetTitle>Ask AI for suggestions about your query!</SheetTitle>
+          <SheetTitle className="flex items-center gap-x-2">
+            <Sparkles className="size-6 text-yellow-500 fill-yellow-500" />
+            Ask AI for suggestions!
+          </SheetTitle>
         </SheetHeader>
-        <div>
-            <pre>{JSON.stringify(data, null, 2)}</pre>
+        <div className="p-4">
+          {isPending && <Skeleton className="w-full h-[250px]" />}
+          {data && (
+            <CodeBlock
+              language="sql"
+              filename="filename.sql"
+              highlightLines={[9, 13, 14, 18]}
+              code={data.query}
+            />
+          )}
         </div>
         <SheetFooter>
           <Form {...form}>
@@ -89,9 +101,15 @@ export default function AskAI() {
                   </FormItem>
                 )}
               />
-              <Button type="submit">
-                Send
-                <Send className="size-5" />
+              <Button type="submit" disabled={isPending}>
+                {isPending ? (
+                  <Loader2 className="animate-spin size-5" />
+                ) : (
+                  <>
+                    Send
+                    <Send className="size-5" />
+                  </>
+                )}
               </Button>
             </form>
           </Form>

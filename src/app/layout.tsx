@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import QueryProvider from "@/components/providers/QueryProvider";
 import Navbar from "@/components/Navbar";
 import { Toaster } from "@/components/ui/sonner";
+import AskAI from "@/components/AskAI";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,7 @@ export default function RootLayout({
             <Toaster />
             <Navbar />
             {children}
-            
+            <AskAI />
           </ThemeProvider>
         </QueryProvider>
       </body>
