@@ -1,3 +1,6 @@
+"use client";
+
+import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import {
   Table,
@@ -8,6 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from "./ui/table";
+
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 interface QueryResultProps {
   error: Error | null;
@@ -20,7 +31,6 @@ export default function QueryResult({
   error,
   isPending,
 }: QueryResultProps) {
-
   return (
     <div className="flex flex-col gap-y-2">
       <h2 className="text-2xl font-bold">Query Output</h2>
@@ -71,26 +81,87 @@ function NoResults({ isPending }: { isPending: boolean }) {
 
 function ResultsTable({ result }: { result: any[] }) {
   const keys = Object.keys(result[0]);
-  
+
+  const columns: ColumnDef<{ accessoryKey: string; header: string }>[] =
+    keys.map((key) => ({
+      accessorKey: key,
+      header: key,
+    }));
+
+  const table = useReactTable({
+    data: result,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
   return (
-    <Table className="overflow-x-auto bg-background rounded-lg">
-      <TableCaption>{result.length} results</TableCaption>
-      <TableHeader>
-        <TableRow>
-          {keys.map((key) => (
-            <TableHead key={key}>{key}</TableHead>
+    <div>
+      <Table className="overflow-x-auto bg-background rounded-lg">
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => {
+                return (
+                  <TableHead key={header.id}>
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                );
+              })}
+            </TableRow>
           ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {result.map((row, i) => (
-          <TableRow key={i}>
-            {keys.map((key) => (
-              <TableCell key={key}>{row[key]}</TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows?.length ? (
+            table.getRowModel().rows.map((row) => (
+              <TableRow
+                key={row.id}
+                data-state={row.getIsSelected() && "selected"}
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={columns.length} className="h-24 text-center">
+                No results.
+              </TableCell>
+            </TableRow>
+          )}
+        </TableBody>
+      </Table>
+      <div className="flex items-center justify-between py-4">
+        <span className="text-sm text-muted-foreground">{`${result.length} results`}</span>
+        <div className="flex items-center gap-x-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
